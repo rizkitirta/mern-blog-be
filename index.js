@@ -1,13 +1,34 @@
 const express = require('express');
 const app = express();
-const router = express.Router();
 const routes = require('./app/routes');
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+
+const fileStorage = multer.diskStorage({
+    destination: (req,file,callback) => {
+        callback(null,'./public/images');
+    },
+    filename: (req,file,callback) => {
+        callback(null,new Date().getTime() + '-' + file.originalname)
+    }
+})
+
+const fileFilter = (req,file,callback) => {
+    if(file.mimetype == 'image/png' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/jpg'){
+        callback(null,true)
+    }else{
+        callback(null,false)
+    }
+}
 
 app.use(bodyParser.json())
+// app.use(express.bodyParser())
 app.use(cors())
+app.use(multer({storage: fileStorage,fileFilter: fileFilter}).single('image'));
+app.use('/public/images',express.static(path.join(__dirname,'/public/images')))
 // app.use((req, res, next) => {
 //     res.setHeader('Access-Control-Allow-Origin', '*');
 //     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
@@ -16,7 +37,8 @@ app.use(cors())
 // })
 
 app.use((error,req,res,next) => {
-    res.status(error.status).json({
+    const status = error.status || 500;
+    res.status(status).json({
         message: error.message,
         data: error.data
     })

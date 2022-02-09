@@ -10,6 +10,10 @@ const blog = new Schema({
         type: String,
         required: true
     },
+    image: {
+        type: String,
+        required: true
+    },
     author: {
         type: Object,
         required: true
